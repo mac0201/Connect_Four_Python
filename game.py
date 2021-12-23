@@ -1,7 +1,3 @@
-# width = 5
-# height = 7
-# grid = [[' ' for col in range(width)] for row in range(height)]
-from os import error
 from termcolor import colored
 
 class Connect_Four:
@@ -13,43 +9,54 @@ class Connect_Four:
                       for row in range(height)]
         self.players = players
         self.current_player = self.players[0]
-        self.taken_box = '|X|'#'|\u2609|' # Unicode symbol
         self.filled_columns = [False for i in range(width)] # Keep track of filled columns
         print(colored(f"Created {self.width}x{self.height} board.", "blue"))
+        self.taken_box = '|X|'
         self.p1_token = '\x1b[32m☉\x1b[0m'
         self.p2_token = '\x1b[33m☉\x1b[0m'
 
     SPACE = "        "
-    ERROR = ''
+    ERROR_FULL = ''
 
     def print_error(self, error):
         print()
-        print(colored(error, 'red'))
-
-    def print_board(self):
-        # SPACE = "        "
-        print(f"{self.SPACE}  {self.display_players()}\n")
-        tags = ''
-        for row in self.board:
-            print(self.SPACE, ''.join(row))
-
-        for tag in range(self.width):
-            tags += f" {str(tag+1)} "
-        print(self.SPACE, tags)
+        print(self.SPACE, colored(error, 'red'))
 
     def get_player_tokens(self):
         p1 = colored('\u2609', 'green')
         p2 = colored('\u2609', 'yellow')
         return [p1, p2]
 
-    ##! Needed?
-    def get_current_player(self):
-        return self.current_player
+    def display_players(self):
+        return f"{colored(self.players[0], 'green')} vs {colored(self.players[1], 'yellow')}"
+
+    def padding(self):
+        """ Creates padding between the printed boards in each game loop """
+        for i in range(5):
+            print()
 
     def update_current_player(self):
         self.current_player = self.players[1] if self.current_player == self.players[0] else self.players[0]
 
+
+    def print_board(self):
+        """ Prints the game board with column number tags """
+        print(f"{self.SPACE}  {self.display_players()}\n")
+        tags = ''
+        for row in self.board:
+            print(self.SPACE, ''.join(row))
+        for tag in range(self.width):
+            tags += f" {str(tag+1)} "
+        print(self.SPACE, tags)
+
+
     def check_available(self, column):
+        """
+            Checks if there are any available cells in specified column. Empty cell index is added to list which gets returned after loop finished.
+            If no available cells, set field in class filled_columns array at given column index to True, which keeps track of full columns.
+
+            Returns list of available indices in the column  
+        """
         available = []  # available indices to place the disc
         for i in range(self.height):
             if self.board[i][column] == self.empty_box:
@@ -59,79 +66,108 @@ class Connect_Four:
             return False
         return available
 
+
     def drop(self, column):
+        """
+            Drops current player's disc in the specified column, given there are available cells. Return if none.
+            If cells available, disc is added to last available cell; for example, if cells 0-4 are available, disc is placed in cell 4
+            Taken boxes are initially marked with 'X', but are replaced with coloured player tokens.
+        """
         available = self.check_available(column)
         if not available:
-            self.ERROR = f'No spaces left in column {column + 1}.'
+            self.ERROR_FULL = f'No spaces left in column {column + 1}.'
+            self.update_current_player()
             return
-
         token = self.p1_token if self.current_player == self.players[0] else self.p2_token
-
+        # self.update_current_player()
         row = max(available)
-        # print(f'drop in row {row}')
-        self.board[row][column] = self.taken_box.replace('X', token)#self.taken_box.replace('\u2609', colored('\u2609', color))
+        self.board[row][column] = self.taken_box.replace('X', token)
         self.check_available(column)
 
     def check_win_horizontal(self):
-        board = self.board
+        """ 
+            Checks for winning combination horizontally. 
+            Returns an array containing winning coordinates and the direction, otherwise returns False
+         """
         win_coords = []
         for row in range(self.height-1, -1, -1):
             for col in range(self.width-3):
-                
-                check = board[row][col:(col+4)]
-                # s.append((row, col))
-                win = True if (all(i == f'|{self.p1_token}|' for i in check) or all(i == f'|{self.p2_token}|' for i in check)) else False #
-
-                x = all(i == f'|{self.p1_token}|' for i in check)
-                # print(x)
-
-
-                # for i in check:
-                #     if all(i == f'|{self.p1_token}|'):
-                #         print("WWWWWWWIIIIIIIIN")
-                
+                check = self.board[row][col:(col+4)]
+                win = True if (all(i == f'|{self.p1_token}|' for i in check) or all(i == f'|{self.p2_token}|' for i in check)) else False 
                 if win: #return True
-                    win_coords.append(([row, col], [row, col+3]))
-                    print('You have won horizontally!')
-                    print(win_coords)
-                    return True, win_coords
-
-                    # return True
-            # win_coords = []
+                    win_coords.append([row, col, col+3])
+                    return win_coords, 'horizontal'
         return False
 
     def check_win_vertical(self):
+        """ 
+            Checks for winning combination vertically. 
+            Returns an array containing winning coordinates and the direction, otherwise returns False
+         """
+        win_coords=[]
         for col in range(self.width):
             check = []
             for row in self.board:
                 check.append(row[col])
             for i in range(len(check)-3):
-                win = True if (all(j == f'|{self.p1_token}|' for j in check[i:i+4]) or all(j == f'|{self.p2_token}|' for j in check[i:i+4])) else False                                  #! CHANGE HERE
+                win = True if (all(j == f'|{self.p1_token}|' for j in check[i:i+4]) or all(j == f'|{self.p2_token}|' for j in check[i:i+4])) else False  
                 if win:
-                    print('You have won vertically')
-                    return True
+                    win_coords.append([col, i, i+3])
+                    return win_coords, 'vertical'
         return False
 
 
+    def check_win(self):
+        """ 
+            Uses defined win-checking functions. Each function returns either False (if no win) or iterable containing winning coordinates, and the direction. 
+            If return is the iterable, pass into change_colour function to change colours.
 
-    def display_players(self):
-        p1 = self.players[0]
-        p2 = self.players[1]
-        return f"{colored(p1, 'green')} vs {colored(p2, 'yellow')}"
+            Returns True if win, else switches current player and returns False
+         """
+        h = self.check_win_horizontal()
+        v = self.check_win_vertical()
+        if v:
+            self.change_color(v[0], v[1])
+            return True
+        if h:
+            self.change_color(h[0], h[1])
+            return True
+        self.update_current_player()
+        return False
+        
 
-    def padding(self):
-        for i in range(5):
-            print()
+    def change_color(self, coords, direction):
+        """ Change the colour of winning player's discs at passed coordinates, in the direction specified """
+        c = coords[0][0]    # Row or Column index
+        start = coords[0][1] # index of starting row/col
+        end = coords[0][2] # index of ending row/col
+        for i in range(start, end + 1):
+            if direction == 'vertical':
+                self.board[i][c] = '|\x1b[31m☉\x1b[0m|'
+            if direction == 'horizontal':
+               self.board[c][i] = '|\x1b[31m☉\x1b[0m|'     
+            if direction == 'diagonal_right':
+                pass
+            if direction == 'diagonal_left':
+                pass
+        self.print_board()
+
 
     def test(self):
-        
-        self.board[0][3] = '|X|'
-        self.board[1][3] = '|X|'
-        self.board[2][3] = '|X|'
-        self.board[3][3] = '|X|'
-        self.print_board()
-        self.chceck_win_horizontal()
+        #! Horizontal
+        # self.board[1][1] = f'|{t[0]}|'
+        # self.board[1][2] = f'|{t[0]}|'
+        # self.board[1][3] = f'|{t[0]}|'
+        # self.board[1][4] = f'|{t[0]}|'
 
+        #! Vertical
+        # self.board[1][1] = f'|{t[0]}|'
+        # self.board[2][1] = f'|{t[0]}|'
+        # self.board[3][1] = f'|{t[0]}|'
+        # self.board[4][1] = f'|{t[0]}|'
+
+        self.print_board()
+        self.check_win()
 
 
 
@@ -139,26 +175,22 @@ class Connect_Four:
 
 
     def play(self):
-
         if not len(self.players) == 2:
             self.print_error('Too many players. Max 2!')
             return 
 
         self.padding()
-
         print('\n********** CONNECT FOUR **********')
-        # print(f"{self.SPACE}  {self.display_players()}\n")
-
-        # game_over = False
         self.print_board()
 
         while True:
             valid_input = False
-
             print(f'\nTurn: {self.current_player}')
             # Validate if input is integer
             while not (valid_input):
                 inp = input(f'\nSpecify column to place disc (1-{self.width}):  ')
+   
+                if inp == 'exit': return
                 try:
                     inp = int(inp) # convert to integer
                     if inp in range(1, self.width+1):
@@ -167,37 +199,25 @@ class Connect_Four:
                         self.print_error('Number out of range.')
                 except:
                     self.print_error('Wrong input format.')
-            
-
-            
-
+    
+            # Input valid, continue...
             self.drop(inp - 1)
-            self.update_current_player()
+
+            if self.check_win():
+                print(f'{self.SPACE} {self.current_player} has won!')
+                return True
+
             self.padding()
             self.print_board()
 
-            # check for win
-            if self.check_win_horizontal() or self.check_win_vertical():
-                coords = self.check_win_horizontal()
-                # print(coords)
-                print("Have you won?")
-                print(coords[1])
-                return True
+            if all(self.filled_columns):
+                self.print_error('GAME OVER - DRAW')
+                # print(f'{self.SPACE} GAME OVER - DRAW')
+                return False
 
-
-            if self.ERROR:
-                self.print_error(self.ERROR)
-
-
-            # make win check work with unicode symbol, instead of X and O
-
-            # win check not working above row 1 (fixed)
-
-            # when win, get the indices of discs and change their colour
-
-            # return False
-
-
+            if self.ERROR_FULL:
+                self.print_error(self.ERROR_FULL)
+                self.ERROR_FULL = ''
 
 
 class Player:
@@ -224,39 +244,6 @@ game = Connect_Four(5, 7, [p1, p2])
 # game.drop(4)
 
 # game.play()
-game.test()
+game.play()
 # game.play()
 
-
-# def get_free_space(col):
-#     available_indices = []
-#     for i in range(height):
-#         if grid[i][col] == ' ':
-#             available_indices.append(i)
-#             # print(f'Index {i} is available.')
-#         print(grid[i][col].replace(' ', 'x'))
-#     print(f'Available indices in column are: {available_indices}')
-#     print(f'The disc should be placed in {max(available_indices)}')
-
-#     # for row in grid[row][col]:
-#     #     print(row.replace(' ', 'x'))
-
-
-# get_free_space(0)
-
-
-# def place_disc(current_player, column):
-#     pass
-#     # drop current player's disc in specified column
-
-
-# def switch_player(current_player):
-#     # p1 = 0,  p2 = 1
-#     print(
-#         f'player switched to {"player 1" if current_player == 1 else "player 2"}')
-#     return 1 if current_player == 0 else 0
-
-
-# # drop disc
-
-# # refresh
