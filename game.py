@@ -18,6 +18,9 @@ class Connect_Four:
     SPACE = "        "
     ERROR_FULL = ''
 
+    def __repr__(self) -> str:
+        return f'   Game of Connect Four.\n   Size: {self.width}x{self.height}\n   Players: {self.players[0]} [GREEN]  and  {self.players[1]} [YELLOW]'
+
     def print_error(self, error):
         print()
         print(self.SPACE, colored(error, 'red'))
@@ -110,74 +113,45 @@ class Connect_Four:
             for row in self.board:
                 check.append(row[col])
             for i in range(len(check)-3):
-                win = True if (all(j == f'|{self.p1_token}|' for j in check[i:i+4]) or all(j == f'|{self.p2_token}|' for j in check[i:i+4])) else False  
-                if win:
+                if (all(j == f'|{self.p1_token}|' for j in check[i:i+4]) or all(j == f'|{self.p2_token}|' for j in check[i:i+4])):
                     win_coords.append([col, i, i+3])
                     return win_coords, 'vertical'
         return False
 
 
     def check_win_diagonal_right(self):
+        """ 
+            Checks for winning combination diagonally, right /. 
+            Returns an array containing winning coordinates and the direction, otherwise returns False
+         """
         win_coords = []
         for row in range(self.height-1, 2, -1):
-            # print(self.board[row])
-            check = []
-            print(row)
-            b = self.board
             for col in range(0, self.width-3):
-
-                print('current col: ', col)
-                # print(self.board[row][col])
-
-                # check.append([b[row][col],  b[row-1][col+1], b[row-2][col+2], b[row-3][col+3]]) # WORKS
-                # check = []
                 check = []
                 for i in range(4):
-                    print(b[row-i][col+i])
-                    check.append(b[row-i][col+i])
-                if all(i == f'|{self.p1_token}|' for i in check):
-                    print('**************************************** WIN')
-                    coord = []
+                    check.append(self.board[row-i][col+i])
+                if all(i == f'|{self.p1_token}|' for i in check) or all(i == f'|{self.p2_token}|' for i in check):
+                    win_coords = []
                     for i in range(4):
-                        coord.append([row-i, col+i])
-                    print('coords = ')
-                    print(coord)
-                    return coord, 'diagonal_right'
+                        win_coords.append([row-i, col+i])
+                    return win_coords, 'diagonal_right'
+        return False
+               
+               
+    def check_win_diagonal_left(self):
+        win_coords = []
+        for row in range(self.height-1, 2, -1):
+            for col in range(self.width-1, 2, -1):
+                check = []
+                for i in range(4):
+                    check.append(self.board[row-i][col-i])
+                if all(i == f'|{self.p1_token}|' for i in check) or all(i == f'|{self.p2_token}|' for i in check):
+                    win_coords = []
+                    for i in range(4):
+                        win_coords.append([row-i, col-i])
+                    return win_coords, 'diagonal_left'
+        return False
 
-                    
-                #     check.append(b[row-i][col+i])
-                # # check.append(c)
-
-                # # print('current check:')
-                # # print(check)
-                # win = True if (all(i == f'|{self.p1_token}|' for i in check)) else False
-                # if win:
-                #     #! Update here
-                #     print('WON!!!!')
-                #     # print([row-i, col+i] for i in range(0, 4))
-                #     for i in range(0,4):
-                #         print(row-i, col+i)
-                #     win_coords.append([[row-i, col+i] for i in range(0, 4)])
-                    # return win_coords[0], 'diagonal_right'
-
-
-
-                    # for i in range(0, 4):
-                    #     # win_coords.append([row-i, col+i])
-                    #     win_coords.append([row])
-                    # return win_coords
-                # print(self.board[row:(row+3)][col:(col+3)])
-                # print()
-                # check = self.board[row:(row-3)][col:(col+3)]
-                # # print(check)
-
-                # print(win)
-                # if win:
-                #     win_coords.append([row, row+3])
-            # return False
-            # print(check)
-            print()
-                # print(win_coords)
 
     def check_win(self):
         """ 
@@ -189,60 +163,44 @@ class Connect_Four:
         h = self.check_win_horizontal()
         v = self.check_win_vertical()
         d_r = self.check_win_diagonal_right()
-        # if v:
-        #     self.change_color(v[0], v[1])
-        #     return True
-        # if h:
-        #     self.change_color(h[0], h[1])
-        #     return True
-        if d_r:
-            print("DR WINNNN")
-            coords_list = d_r[0]
-            for i in range(0, 4):
-                self.change_color_diag(coords_list[i], 'diagonal_right')
-                # print(coords_list[i])
-            self.print_board()
+        d_l = self.check_win_diagonal_left()
+        if v:
+            self.change_color(v[0], v[1])
             return True
-            # print(d_r[0])
+        if h:
+            self.change_color(h[0], h[1])
+            return True
+        if d_r:
+            for i in range(0, 4):
+                self.change_color(d_r[0][i], d_r[1])
+            return True
+        if d_l:
+            for i in range(4):
+                self.change_color(d_l[0][i], d_l[1])
+            return True
+        
         self.update_current_player()
         return False
-
-
-    def change_color_diag(self, coords, direction):
-        # print('passed:')
-        # print(coords)
-        # print(f'{coords[0]}, {coords[1]}')
-        c1 = coords[0]
-        c2 = coords[1]
-        # print(c1, c2)
-        # pass
-        self.board[c1][c2] = '|\x1b[31m☉\x1b[0m|'
-        # for i in range(c1, c2+1):
-        #     self.board[c1][c2] = '|\x1b[31m☉\x1b[0m|'
-             
+        
 
     def change_color(self, coords, direction):
         """ Change the colour of winning player's discs at passed coordinates, in the direction specified """
-        c = coords[0][0]    # Row or Column index
-        start = coords[0][1] # index of starting row/col
-        end = coords[0][2] # index of ending row/col
-        for i in range(start, end + 1):
-            if direction == 'vertical':
-                self.board[i][c] = '|\x1b[31m☉\x1b[0m|'
-            if direction == 'horizontal':
-               self.board[c][i] = '|\x1b[31m☉\x1b[0m|'     
-            if direction == 'diagonal_right':
-                pass
-            if direction == 'diagonal_left':
-                pass
-        
-        self.print_board()
+        if direction == 'diagonal_right' or direction == 'diagonal_left':
+            self.board[coords[0]][coords[1]] = '|\x1b[31m☉\x1b[0m|'
+        else:
+            c = coords[0][0]    # Row or Column index
+            start = coords[0][1] # index of starting row/col
+            end = coords[0][2] # index of ending row/col
+            for i in range(start, end + 1):
+                if direction == 'horizontal':
+                    self.board[c][i] = '|\x1b[31m☉\x1b[0m|'    
+                if direction == 'vertical':
+                    self.board[i][c] = '|\x1b[31m☉\x1b[0m|'
+
 
 
     def test(self):
         t = self.get_player_tokens()
-        token = f'|{t[0]}|'
-        token2 = f'|{t[1]}|'
         #! Horizontal
         # self.board[1][1] = f'|{t[0]}|'
         # self.board[1][2] = f'|{t[0]}|'
@@ -256,49 +214,45 @@ class Connect_Four:
         # self.board[4][1] = f'|{t[0]}|'
 
         #! Diagonal Right   
-        self.board[3][0] = f'|{t[0]}|'
-        self.board[2][1] = f'|{t[0]}|'
-        self.board[1][2] = f'|{t[0]}|'
-        self.board[0][3] = f'|{t[0]}|'
-
-        # self.board[6][0] = f'|{t[0]}|'
-        # self.board[5][1] = f'|{t[0]}|'
-        # self.board[4][2] = f'|{t[0]}|'
-        # self.board[3][3] = f'|{t[0]}|'
-
-        # self.board[5][0] = f'|5|'
-        # self.board[4][1] = f'|6|'
-        # self.board[3][2] = f'|7|'
-        # self.board[2][3] = f'|8|'
-        
-        
-        # self.board[6][1] = f'|{t[0]}|'
-        # self.board[5][2] = f'|{t[0]}|'
-        # self.board[4][3] = f'|{t[0]}|'
-        # self.board[3][4] = f'|{t[0]}|'
-
+        # self.board[3][0] = f'|{t[0]}|'
+        # self.board[2][1] = f'|{t[0]}|'
+        # self.board[1][2] = f'|{t[0]}|'
+        # self.board[0][3] = f'|{t[0]}|'
 
         #! Diagonal Left
-        # self.board[0][0] = token
-        # self.board[1][1] = token
-        # self.board[2][2] = token
-        # self.board[3][3] = token
 
-        x = self.check_win_diagonal_right()
-        print(x)
+        # self.board[3][0] = f'|{t[0]}|'
+        # self.board[4][1] = f'|{t[0]}|'
+        # self.board[5][2] = f'|{t[0]}|'
+        # self.board[6][3] = f'|{t[0]}|'
+
+
+        # self.board[0][0] = f'|{t[0]}|'
+        # self.board[1][1] = f'|{t[0]}|'
+        # self.board[2][2] = f'|{t[0]}|'
+        # self.board[3][3] = f'|{t[0]}|' 
+
+
+        # self.board[0][1] = f'|{t[0]}|'
+        # self.board[1][2] = f'|{t[0]}|'
+        # self.board[2][3] = f'|{t[0]}|'
+        # self.board[3][4] = f'|{t[0]}|'    
 
         self.print_board()
+
         if self.check_win():
             print('WON')
-
-
-
-
+        
+        self.print_board()
 
 
     def play(self):
+
+        if self.width < 4 or self.height < 4:
+            self.print_error('Board must be at least 4x4')
+            return
         if not len(self.players) == 2:
-            self.print_error('Too many players. Max 2!')
+            self.print_error('Number of players must be equal to 2.')
             return 
 
         self.padding()
@@ -326,7 +280,9 @@ class Connect_Four:
             self.drop(inp - 1)
 
             if self.check_win():
-                print(f'{self.SPACE} {self.current_player} has won!')
+                self.padding()
+                self.print_board()
+                print(f'\n{self.SPACE} {self.current_player} has won!')
                 return True
 
             self.padding()
@@ -352,19 +308,6 @@ class Player:
 p1 = Player('Maciej')
 p2 = Player('Julia')
 
-
 game = Connect_Four(5, 7, [p1, p2])
 
-#! TEST DATA
-# game.drop(1)
-# game.drop(1)
-# game.drop(1)
-# game.drop(1)
-# game.update_current_player()
-# game.drop(2)
-# game.drop(3)
-# game.drop(4)
-
-
-# game.play()
-game.test()
+game.play()
