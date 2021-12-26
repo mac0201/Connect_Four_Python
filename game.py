@@ -21,22 +21,21 @@ class Connect_Four:
     def __repr__(self) -> str:
         return f'   Game of Connect Four.\n   Size: {self.width}x{self.height}\n   Players: {self.players[0]} [GREEN]  and  {self.players[1]} [YELLOW]'
 
+
     def print_error(self, error):
         print()
         print(self.SPACE, colored(error, 'red'))
 
-    def get_player_tokens(self):
-        p1 = colored('\u2609', 'green')
-        p2 = colored('\u2609', 'yellow')
-        return [p1, p2]
 
     def display_players(self):
         return f"{colored(self.players[0], 'green')} vs {colored(self.players[1], 'yellow')}"
+
 
     def padding(self):
         """ Creates padding between the printed boards in each game loop """
         for i in range(5):
             print()
+
 
     def update_current_player(self):
         self.current_player = self.players[1] if self.current_player == self.players[0] else self.players[0]
@@ -87,6 +86,7 @@ class Connect_Four:
         self.board[row][column] = self.taken_box.replace('X', token)
         self.check_available(column)
 
+
     def check_win_horizontal(self):
         """ 
             Checks for winning combination horizontally. 
@@ -101,6 +101,7 @@ class Connect_Four:
                     win_coords.append([row, col, col+3])
                     return win_coords, 'horizontal'
         return False
+
 
     def check_win_vertical(self):
         """ 
@@ -123,7 +124,7 @@ class Connect_Four:
         """ 
             Checks for winning combination diagonally, right /. 
             Returns an array containing winning coordinates and the direction, otherwise returns False
-         """
+        """
         win_coords = []
         for row in range(self.height-1, 2, -1):
             for col in range(0, self.width-3):
@@ -135,10 +136,14 @@ class Connect_Four:
                     for i in range(4):
                         win_coords.append([row-i, col+i])
                     return win_coords, 'diagonal_right'
-        return False
+        return False     
                
-               
+
     def check_win_diagonal_left(self):
+        """     
+            Checks for winning combination diagonally, left \. 
+            Returns an array containing winning coordinates and the direction, otherwise returns False
+        """
         win_coords = []
         for row in range(self.height-1, 2, -1):
             for col in range(self.width-1, 2, -1):
@@ -198,56 +203,7 @@ class Connect_Four:
                     self.board[i][c] = '|\x1b[31m☉\x1b[0m|'
 
 
-
-    def test(self):
-        t = self.get_player_tokens()
-        #! Horizontal
-        # self.board[1][1] = f'|{t[0]}|'
-        # self.board[1][2] = f'|{t[0]}|'
-        # self.board[1][3] = f'|{t[0]}|'
-        # self.board[1][4] = f'|{t[0]}|'
-
-        #! Vertical
-        # self.board[1][1] = f'|{t[0]}|'
-        # self.board[2][1] = f'|{t[0]}|'
-        # self.board[3][1] = f'|{t[0]}|'
-        # self.board[4][1] = f'|{t[0]}|'
-
-        #! Diagonal Right   
-        # self.board[3][0] = f'|{t[0]}|'
-        # self.board[2][1] = f'|{t[0]}|'
-        # self.board[1][2] = f'|{t[0]}|'
-        # self.board[0][3] = f'|{t[0]}|'
-
-        #! Diagonal Left
-
-        # self.board[3][0] = f'|{t[0]}|'
-        # self.board[4][1] = f'|{t[0]}|'
-        # self.board[5][2] = f'|{t[0]}|'
-        # self.board[6][3] = f'|{t[0]}|'
-
-
-        # self.board[0][0] = f'|{t[0]}|'
-        # self.board[1][1] = f'|{t[0]}|'
-        # self.board[2][2] = f'|{t[0]}|'
-        # self.board[3][3] = f'|{t[0]}|' 
-
-
-        # self.board[0][1] = f'|{t[0]}|'
-        # self.board[1][2] = f'|{t[0]}|'
-        # self.board[2][3] = f'|{t[0]}|'
-        # self.board[3][4] = f'|{t[0]}|'    
-
-        self.print_board()
-
-        if self.check_win():
-            print('WON')
-        
-        self.print_board()
-
-
     def play(self):
-
         if self.width < 4 or self.height < 4:
             self.print_error('Board must be at least 4x4')
             return
@@ -290,7 +246,6 @@ class Connect_Four:
 
             if all(self.filled_columns):
                 self.print_error('GAME OVER - DRAW')
-                # print(f'{self.SPACE} GAME OVER - DRAW')
                 return False
 
             if self.ERROR_FULL:
@@ -299,14 +254,14 @@ class Connect_Four:
 
 
 class Player:
-    def __init__(self, name) -> None:
+    def __init__(self, name):
         self.name = name
 
     def __repr__(self) -> str:
         return f'{self.name}'
 
-p1 = Player('Maciej')
-p2 = Player('Julia')
+p1 = Player('Jack')
+p2 = Player('Bob')
 
 game = Connect_Four(5, 7, [p1, p2])
 
